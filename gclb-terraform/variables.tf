@@ -6,6 +6,10 @@ variable "shared_vpc_host_project_id" {
   description = "The ID of the host project which hosts the shared VPC e.g. shared-vpc-host-project-55427"
 }
 
+variable "registry_project_id" {
+  default = "jkwng-cicd-274417"
+}
+
 variable "shared_vpc_network" {
   description = "The ID of the shared VPC e.g. shared-network"
 }

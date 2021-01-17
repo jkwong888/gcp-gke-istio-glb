@@ -43,6 +43,13 @@ resource "google_compute_url_map" "istio_ingress" {
 }
 
 resource "google_compute_backend_service" "istio_ingress" {
+  lifecycle {
+    ignore_changes = [
+      # Ignore changes to backend since it's dynamically added
+      backend,
+    ]
+  }
+
   name        = "backend"
   project = data.google_project.service_project.project_id
   port_name   = "http"
@@ -50,13 +57,18 @@ resource "google_compute_backend_service" "istio_ingress" {
   
   timeout_sec = 10
 
-  health_checks = [google_compute_http_health_check.istio_ingress.id]
+  health_checks = [google_compute_health_check.istio_ingress.id]
 }
 
-resource "google_compute_http_health_check" "istio_ingress" {
+resource "google_compute_health_check" "istio_ingress" {
   name               = "check-backend-istio-ingress"
   project = data.google_project.service_project.project_id
-  request_path       = "/"
+
+  http_health_check {
+    port_specification = "USE_SERVING_PORT"
+  }  
+
   check_interval_sec = 1
   timeout_sec        = 1
+
 }

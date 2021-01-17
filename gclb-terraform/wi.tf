@@ -1,9 +1,13 @@
 # Workload Identity IAM binding for AutoNEG controller.
-resource "google_service_account_iam_member" "autoneg-sa-workload-identity" {
-  service_account_id = google_service_account.autoneg-system.id
+resource "google_service_account_iam_binding" "autoneg-sa-workload-identity" {
+  service_account_id = google_service_account.autoneg-system.name
   role               = "roles/iam.workloadIdentityUser"
-  member             = "serviceAccount:${data.google_project.service_project.project_id}.svc.id.goog[autoneg-system/autoneg-system]"
+
+  members = [
+    format("serviceAccount:%s.svc.id.goog[%s/%s]", data.google_project.service_project.project_id, "autoneg-system", "autoneg-system"),
+  ]
 }
+
 
 # Service account used by autoneg controller.
 resource "google_service_account" "autoneg-system" {

@@ -27,6 +27,16 @@ I have created a terraform with the sample load balancer and workload identity s
 Follow the instructions [here](https://github.com/GoogleCloudPlatform/gke-autoneg-controller) to install the autoneg controller.  this will automatically connect services with the right annotations to a backend service we created earlier.
 
 
+```
+kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/gke-autoneg-controller/master/deploy/autoneg.yaml
+```
+
+add the annotation to the service account to map the workload identity SA created by terraform to the kubernetes SA:
+
+```
+kubectl annotate sa -n autoneg-system default \
+  iam.gke.io/gcp-service-account=autoneg-system@${PROJECT_ID}.iam.gserviceaccount.com
+```
 
 
 ###  Install istio 1.8 using Istio Operator
@@ -55,6 +65,7 @@ The main sections to change here are under the ingress gateway, where we want to
         ...  
         serviceAnnotations:
             cloud.google.com/neg: '{"exposed_ports": {"80":{"name": "istio-ingressgateway-80"},"443":{"name": "istio-ingressgateway-443"}}}'
+            anthos.cft.dev/autoneg: '{"name":"backend", "max_rate_per_endpoint":1000}'
 ```
 
 you can use my yaml, or make your own

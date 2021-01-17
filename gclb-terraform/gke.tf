@@ -9,8 +9,15 @@ locals {
     "roles/monitoring.metricWriter",
     "roles/logging.logWriter",
     "roles/monitoring.viewer",
-    "roles/storage.objectViewer",
   ]
+}
+
+resource "google_project_service" "service_project_computeapi" {
+  count                      = length(local.apis_to_enable)
+  project                    = data.google_project.service_project.project_id
+  service                    = element(local.apis_to_enable, count.index)
+  disable_on_destroy         = true
+  disable_dependent_services = false
 }
 
 
@@ -40,22 +47,6 @@ data "google_compute_subnetwork" "subnet" {
   project       = data.google_project.host_project.project_id
 }
 
-resource "google_project_service" "service_project_computeapi" {
-  count                      = length(local.apis_to_enable)
-  project                    = data.google_project.service_project.project_id
-  service                    = element(local.apis_to_enable, count.index)
-  disable_on_destroy         = true
-  disable_dependent_services = false
-}
-
-resource "google_compute_shared_vpc_service_project" "shared_vpc_attachment" {
-  host_project    = data.google_project.host_project.project_id
-  service_project = data.google_project.service_project.project_id
-
-  depends_on = [
-    google_project_service.service_project_computeapi,
-  ]
-}
 
 resource "google_service_account" "gke_sa" {
   project = data.google_project.service_project.project_id
@@ -111,10 +102,16 @@ resource "google_project_iam_member" "container_host_service_agent" {
 resource "google_container_cluster" "primary" {
   provider = google
 
+  lifecycle {
+    ignore_changes = [
+      # Ignore changes to tags, e.g. because a management agent
+      # updates these based on some ruleset managed elsewhere.
+      node_config,
+    ]
+  }
 
   depends_on = [
     google_project_service.service_project_computeapi,
-    google_compute_shared_vpc_service_project.shared_vpc_attachment,
     google_compute_subnetwork_iam_member.gke_sa_network_user,
     google_project_iam_member.gke_sa_role,
     google_compute_subnetwork_iam_member.container_network_user,
@@ -159,6 +156,11 @@ resource "google_container_cluster" "primary" {
     oauth_scopes    = [
       "https://www.googleapis.com/auth/cloud-platform"
     ]
+
+    workload_metadata_config {
+      node_metadata = "GKE_METADATA_SERVER"
+    }
+
   }
 
   private_cluster_config {
@@ -180,10 +182,6 @@ resource "google_container_cluster" "primary" {
   ip_allocation_policy {
     cluster_secondary_range_name = var.gke_subnet_pods_range_name
     services_secondary_range_name = var.gke_subnet_services_range_name
-  }
-
-  network_policy {
-    enabled = true
   }
 
   workload_identity_config {
@@ -212,8 +210,12 @@ resource "google_container_node_pool" "primary_preemptible_nodes" {
       disable-legacy-endpoints = "true"
     }
 
+    workload_metadata_config {
+      node_metadata = "GKE_METADATA_SERVER"
+    }
+
     service_account = google_service_account.gke_sa.email
-    oauth_scopes    = [
+    oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform"
     ]
   }

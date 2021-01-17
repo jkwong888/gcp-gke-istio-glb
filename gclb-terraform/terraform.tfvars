@@ -3,6 +3,7 @@ shared_vpc_network = "shared-network"
 
 service_project_id = "jkwng-asm-two"
 
+
 subnet_name = "asm-central1"
 subnet_region = "us-central1"
 

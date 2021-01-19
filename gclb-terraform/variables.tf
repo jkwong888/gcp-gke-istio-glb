@@ -7,7 +7,6 @@ variable "shared_vpc_host_project_id" {
 }
 
 variable "registry_project_id" {
-  default = "jkwng-cicd-274417"
 }
 
 variable "shared_vpc_network" {

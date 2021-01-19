@@ -110,8 +110,8 @@ spec:
             protocol: TCP
             targetPort: 15443
         serviceAnnotations:
-            cloud.google.com/neg: '{"exposed_ports": {"80":{"name": "istio-ingressgateway-80"},"443":{"name": "istio-ingressgateway-443"}}}'
-            anthos.cft.dev/autoneg: '{"name":"backend", "max_rate_per_endpoint":1000}'
+            cloud.google.com/neg: '{"exposed_ports": {"80":{"name": "istio-ingressgateway-80"}}}'
+            anthos.cft.dev/autoneg: '{"name":"istio-http", "max_rate_per_endpoint":1000}'
         strategy:
           rollingUpdate:
             maxSurge: 100%

@@ -50,8 +50,8 @@ resource "google_compute_backend_service" "istio_ingress" {
     ]
   }
 
-  name        = "backend"
-  project = data.google_project.service_project.project_id
+  name        = "istio-http"
+  project     = data.google_project.service_project.project_id
   port_name   = "http"
   protocol    = "HTTP"
   
@@ -64,7 +64,8 @@ resource "google_compute_health_check" "istio_ingress" {
   name               = "check-backend-istio-ingress"
   project = data.google_project.service_project.project_id
 
-  http_health_check {
+  # istio-ingressgateway for http is 8080
+  tcp_health_check {
     port_specification = "USE_SERVING_PORT"
   }  
 

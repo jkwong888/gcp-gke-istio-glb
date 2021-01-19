@@ -1,8 +1,8 @@
 
 locals {
   apis_to_enable = [
-    "compute.googleapis.com",
     "container.googleapis.com",
+    "compute.googleapis.com",
   ]
 
   gke_sa_roles = [
@@ -40,6 +40,16 @@ resource "google_compute_subnetwork" "subnet" {
   }
 }
 */
+
+resource "google_compute_shared_vpc_service_project" "shared_vpc_attachment" {
+  host_project    = data.google_project.host_project.project_id
+  service_project = data.google_project.service_project.project_id
+
+  depends_on = [
+    google_project_service.service_project_computeapi,
+  ]
+}
+
 
 data "google_compute_subnetwork" "subnet" {
   name          = var.subnet_name
